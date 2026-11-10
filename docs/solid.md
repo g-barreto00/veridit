@@ -58,3 +58,13 @@ Organização em camadas: `dominio/` (regras, sem framework) → `aplicacao/` (c
 | **L** | [`ClienteCarteiraHttp`](../servicos/registros/src/infra/cliente-carteira-http.ts) e `CarteiraFalsa` (teste); [`AlocadorSessaoRedis`](../servicos/registros/src/infra/alocador-sessao-redis.ts) e `AlocadorFalso` | A saga se comporta igual com o cliente HTTP real ou com o dublê; os 11 testes de integração exercitam a saga inteira sem subir o serviço de Créditos |
 | **I** | `CarteiraCreditos` expõe só `reservar/consumir/estornar`; `AlocadorSessao` só `registrar/remover` ([`portas.ts`](../servicos/registros/src/dominio/portas.ts)) | Registros não depende de saldo, extrato ou de qualquer outra operação da Carteira |
 | **D** | Saga e casos de uso dependem das portas; [`composicao.ts`](../servicos/registros/src/composicao.ts) recebe carteira e alocador por parâmetro | A chamada síncrona à Carteira (ADR-0008) poderia virar mensageria sem alterar a saga |
+
+## Motor de Captura — worker (C12; ADR-0003, ADR-0009)
+
+| Princípio | Onde | Por quê |
+|---|---|---|
+| **S** | [`AtenderSolicitacao`](../servicos/captura/src/aplicacao/atender-solicitacao.ts) cuida do ciclo de vida do pedido; [`SessaoCaptura`](../servicos/captura/src/aplicacao/sessao-captura.ts) da sessão (streaming, captura, conclusão); [`ColetorMetadados`](../servicos/captura/src/aplicacao/coletor-metadados.ts) só dos metadados técnicos; [`FabricaNavegadoresDocker`](../servicos/captura/src/infra/navegador-docker.ts) só cria/destrói contêineres | Os nomes seguem os subcomponentes do C12 no documento de arquitetura (Consumidor de Solicitações, Gerenciador de Sessão, Ponte de Streaming, Capturador de Tela, Coletor de Metadados) |
+| **O** | Tabela [`COMANDOS`](../servicos/captura/src/aplicacao/comandos.ts) (mouse, rolar, tecla, navegar, capturar, concluir…) | A gravação de vídeo (REQ09, sprint 2) entra como novos comandos, sem alterar `SessaoCaptura` |
+| **L** | `GuardaSemEstado` no lugar da guarda PostgreSQL | O worker usa o mesmo `ConsumidorEventos` dos outros serviços sem ter banco (ADR-0009) |
+| **I** | [`portas.ts`](../servicos/captura/src/portas.ts): `FabricaNavegadores`, `ArmazenamentoTemporario`, `RelogioNtp`, `ResolvedorDns`, `RegistroConexoes` | A sessão não sabe nada de Docker; o coletor não sabe nada de S3 |
+| **D** | Tudo é injetado no [`main.ts`](../servicos/captura/src/main.ts); os testes usam uma fábrica falsa | Em produção a fábrica viraria um *Job/Pod* do Kubernetes (ADR-0009) sem tocar na sessão |

@@ -7,7 +7,7 @@ import type { Request } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import Redis from 'ioredis';
 import { env, envNumero } from '@veridit/plataforma';
-import { CABECALHOS_INTERNOS, autenticacao, correlacao, limitePorIp } from './middlewares';
+import { CABECALHOS_INTERNOS, autenticacao, caminhoSeguro, correlacao, limitePorIp } from './middlewares';
 import { resolverDestino, type Rota } from './rotas';
 import { LimitadorRedis, ListaRevogacaoRedis, ValidadorJwks } from './seguranca';
 
@@ -26,7 +26,8 @@ async function iniciar() {
   const rotas: Rota[] = [
     { prefixo: '/api/auth', destino: env('URL_IDENTIDADE') },
     { prefixo: '/api/usuarios', destino: env('URL_IDENTIDADE') },
-    // Próximos passos: créditos, registros, evidências e sessões de captura (WebSocket).
+    { prefixo: '/api/creditos', destino: env('URL_CREDITOS') },
+    // Próximos passos: registros, evidências e sessões de captura (WebSocket).
   ];
 
   const redis = new Redis(env('REDIS_URL'));
@@ -45,6 +46,7 @@ async function iniciar() {
   app.set('trust proxy', 'loopback');
 
   app.use(correlacao);
+  app.use(caminhoSeguro);
   app.use(limitePorIp(new LimitadorRedis(redis)));
   app.use(autenticacao(validador, revogacao));
 

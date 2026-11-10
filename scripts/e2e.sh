@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Teste ponta a ponta de REQ01, REQ03 e REQ04 pelo API Gateway.
+# Teste ponta a ponta pelo API Gateway: REQ01, REQ03, REQ04 e créditos (ADR-0008).
 # Pré-requisito: docker compose up -d
 set -uo pipefail
 GW=${GW:-http://localhost:8080}
@@ -59,6 +59,20 @@ verificar "cabeçalho forjado sem token" 401 "$(req -H 'x-usuario-id: 00000000-0
 verificar "token adulterado" 401 "$(req -H "authorization: Bearer ${TOKEN}x" $GW/api/usuarios/me)"
 verificar "rota protegida com token" 200 "$(req -H "authorization: Bearer $TOKEN" $GW/api/usuarios/me)"
 grep -q '"cpf":"\*\*\*' /tmp/resp.json && verificar "CPF mascarado" sim sim || verificar "CPF mascarado" sim nao
+
+echo "Créditos (ADR-0008)"
+SALDO=""
+for _ in $(seq 1 20); do
+  req -H "authorization: Bearer $TOKEN" $GW/api/creditos/saldo >/dev/null
+  SALDO=$(python3 -c 'import json; print(json.load(open("/tmp/resp.json")).get("disponivel"))')
+  [[ "$SALDO" == "5" ]] && break; sleep 0.5
+done
+verificar "créditos de boas-vindas" 5 "$SALDO"
+verificar "extrato" 200 "$(req -H "authorization: Bearer $TOKEN" $GW/api/creditos/extrato)"
+verificar "saldo sem token" 401 "$(req $GW/api/creditos/saldo)"
+verificar "rota interna não exposta" 404 "$(req -X POST -H "authorization: Bearer $TOKEN" $GW/api/interno/reservas)"
+verificar "escape de prefixo bloqueado" 400 "$(req --path-as-is -X POST -H "authorization: Bearer $TOKEN" $GW/api/creditos/../interno/reservas)"
+verificar "escape codificado bloqueado" 400 "$(req --path-as-is -X POST -H "authorization: Bearer $TOKEN" $GW/api/creditos/%2e%2e/interno/reservas)"
 
 echo "Renovação"
 verificar "renovar sessão" 200 "$(req -X POST $GW/api/auth/renovar)"

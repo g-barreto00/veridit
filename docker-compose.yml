@@ -76,9 +76,10 @@ services:
     environment:
       PORTA: "8080"
       URL_IDENTIDADE: http://identidade:3001
+      URL_CREDITOS: http://creditos:3002
       REDIS_URL: redis://redis:6379
     ports: ["8080:8080"]
-    depends_on: [identidade, redis]
+    depends_on: [identidade, creditos, redis]
     networks: [rede-interna]
 
   identidade:
@@ -89,6 +90,19 @@ services:
       AMQP_URL: amqp://veridit:veridit_dev@rabbitmq:5672
       CHAVE_CRIPTO_CAMPO: 5J0rqnnk87sJA441FlCFANWRvtgMXpS0z/ytamX1GEg=
       CHAVE_INDICE_CAMPO: 50ASpU2CsYZ3jSgeE10X2eJ6qut9NnkFKVxXHnsZMNs=
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    networks: [rede-interna]
+
+  creditos:
+    build: { context: ., args: { SERVICO: creditos } }
+    environment:
+      PORTA: "3002"
+      DATABASE_URL: postgres://creditos_app:creditos_dev@postgres:5432/veridit
+      AMQP_URL: amqp://veridit:veridit_dev@rabbitmq:5672
+      # Premissa da sprint 1 (sem REQ05): créditos de boas-vindas no cadastro.
+      CREDITOS_BOAS_VINDAS: "5"
     depends_on:
       postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }

@@ -21,6 +21,25 @@ export function correlacao(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+/**
+ * Recusa caminhos com segmentos "." / ".." (inclusive codificados), que poderiam escapar do
+ * prefixo roteado e alcançar rotas /interno dos serviços.
+ */
+export function caminhoSeguro(req: Request, res: Response, next: NextFunction) {
+  let caminho: string;
+  try {
+    caminho = decodeURIComponent(req.originalUrl.split('?')[0]);
+  } catch {
+    res.status(400).json({ mensagem: 'Caminho inválido' });
+    return;
+  }
+  if (caminho.split(/[/\\]/).some((s) => s === '..' || s === '.')) {
+    res.status(400).json({ mensagem: 'Caminho inválido' });
+    return;
+  }
+  next();
+}
+
 export function limitePorIp(limitador: LimitadorTaxa) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const regra = LIMITES_POR_IP.find((l) => l.caminho === req.path);

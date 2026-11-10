@@ -38,3 +38,13 @@ Organização em camadas: `dominio/` (regras, sem framework) → `aplicacao/` (c
 |---|---|---|
 | **O** | [`ModeloEmail<E>`](../servicos/notificacoes/src/portas.ts) — um modelo por tipo de e-mail | Na sprint 2, REQ07/REQ10/REQ11-B entram como novos modelos registrados no consumidor |
 | **D** | Envio pela porta `EnviadorEmail`; [`EnviadorSmtp`](../servicos/notificacoes/src/enviador-smtp.ts) é só uma implementação | Mailpit em desenvolvimento, provedor real em produção, sem alterar os modelos |
+
+## Serviço de Créditos — Carteira (ADR-0008)
+
+| Princípio | Onde | Por quê |
+|---|---|---|
+| **S** | [`Carteira`](../servicos/creditos/src/dominio/carteira.ts) só aplica lançamentos e protege as invariantes; [`UnidadeCarteira`](../servicos/creditos/src/aplicacao/unidade-carteira.ts) só cuida de transação e retentativa por conflito; [`RepositorioCarteirasPg`](../servicos/creditos/src/infra/repositorios-pg.ts) só persiste com concorrência otimista; os jobs do C09 ([`ExpirarReservas`, `VerificarInvariantes`](../servicos/creditos/src/aplicacao/manutencao.ts)) são classes próprias | A regra "saldo nunca negativo" é testada sem banco; a estratégia de concorrência pode mudar (ex.: bloqueio pessimista) sem tocar no domínio |
+| **O** | Tabela `EFEITOS` em [`carteira.ts`](../servicos/creditos/src/dominio/carteira.ts) (efeito de cada tipo de lançamento) e [`PoliticaConsumo`](../servicos/creditos/src/dominio/portas.ts) configurável no banco (premissa P3) | Um novo tipo de registro (ex.: vídeo longo) é só uma linha em `politica_consumo`; um novo tipo de lançamento é uma entrada na tabela de efeitos |
+| **L** | `ConsultaInvariantesPg` reaproveita `Carteira.saldoDosLancamentos` | A regra de cálculo do saldo existe em um único lugar, usada tanto pelo domínio quanto pelo verificador |
+| **I** | Portas separadas: `RepositorioCarteiras`, `RepositorioReservas`, `PoliticaConsumo`, `ConsultaInvariantes` | `CreditarCarteira` não depende de reservas; `VerificarInvariantes` só depende da consulta |
+| **D** | Casos de uso recebem as portas; a montagem fica em [`composicao.ts`](../servicos/creditos/src/composicao.ts), usada pelo `main` e pelos testes de integração | Os testes trocam o relógio por um ajustável para simular expiração de reservas |

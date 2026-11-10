@@ -28,6 +28,8 @@ export interface ArtefatoCapturado {
   nomeArquivo: string;
   tipo: TipoArtefato;
   tamanhoBytes: number;
+  /** SHA-256 (hex) calculado pelo worker no momento da captura. */
+  sha256: string;
   capturadoEm: string;
   /** URL da página no momento da captura (REQ14: "site da imagem"). */
   url: string;
@@ -74,6 +76,11 @@ export type CapturaConcluida = Envelope<
     fim: string;
     artefatos: ArtefatoCapturado[];
     metadados: MetadadosTecnicos[];
+    /**
+     * HMAC-SHA256 de jsonCanonico(dados sem este campo) com a chave de origem dos workers.
+     * Verificador de Origem (C13): os artefatos vieram de um worker de captura autenticado.
+     */
+    assinaturaOrigem: string;
   }
 >;
 

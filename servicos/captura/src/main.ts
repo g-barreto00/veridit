@@ -55,6 +55,7 @@ async function iniciar() {
     {
       workerId,
       proxySaida,
+      chaveOrigem: env('CHAVE_ORIGEM_CAPTURA'),
       enderecoWorker: `http://${ip}:${porta}`,
       idadeMaximaPedidoMs: 5 * 60_000, // = prazo de AGUARDANDO_SESSAO no Registros
       ociosidadeMaximaMs: envNumero('OCIOSIDADE_MAXIMA_S', 180) * 1000,

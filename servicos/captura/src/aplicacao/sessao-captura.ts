@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { BrowserContext, CDPSession, Page } from 'playwright-core';
 import type { WebSocket } from 'ws';
 import type { ArtefatoCapturado, MetadadosTecnicos } from '@veridit/contratos';
@@ -194,6 +195,7 @@ export class SessaoCaptura {
         nomeArquivo,
         tipo: 'IMAGEM',
         tamanhoBytes: imagem.length,
+        sha256: sha256(imagem),
         capturadoEm: meta.horarioNtp ?? meta.horarioSistema,
         url: meta.urlFinal,
       });
@@ -234,6 +236,7 @@ export class SessaoCaptura {
         nomeArquivo: 'metadados.json',
         tipo: 'METADADOS',
         tamanhoBytes: conteudo.length,
+        sha256: sha256(conteudo),
         capturadoEm: fim.toISOString(),
         url: this.dados.urlInicial,
       },
@@ -269,3 +272,5 @@ export class SessaoCaptura {
     if (this.cliente?.readyState === 1) this.cliente.send(JSON.stringify(msg));
   }
 }
+
+const sha256 = (b: Buffer) => createHash('sha256').update(b).digest('hex');

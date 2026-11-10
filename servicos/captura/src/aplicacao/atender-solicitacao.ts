@@ -1,11 +1,17 @@
-import { randomBytes, randomUUID } from 'node:crypto';
-import type { CapturaSolicitada } from '@veridit/contratos';
+import { createHmac, randomBytes, randomUUID } from 'node:crypto';
+import { jsonCanonico, type CapturaConcluida, type CapturaSolicitada } from '@veridit/contratos';
 import { criarEvento, type ContextoConsumo, type PublicadorEventos, type Registrador } from '@veridit/mensageria';
 import type { ArmazenamentoTemporario, FabricaNavegadores } from '../portas';
 import type { ColetorMetadados } from './coletor-metadados';
 import { SessaoCaptura } from './sessao-captura';
 
+/** Verificador de Origem (C13): o worker assina o resultado com a chave de origem dos workers. */
+export function assinarOrigem(dados: Omit<CapturaConcluida['dados'], 'assinaturaOrigem'>, chave: string): string {
+  return createHmac('sha256', chave).update(jsonCanonico(dados)).digest('hex');
+}
+
 export interface ConfigAtendimento {
+  chaveOrigem: string;
   proxySaida: string;
   workerId: string;
   /** Endereço deste worker na rede interna, para o gateway encaminhar o WebSocket. */
@@ -108,22 +114,19 @@ export class AtenderSolicitacao {
       const resultado = await sessao.resultado;
 
       if (resultado.tipo === 'concluida') {
+        const dados = {
+          registroId,
+          usuarioId: pedido.dados.usuarioId,
+          sessaoId,
+          workerId: this.config.workerId,
+          urlInicial: pedido.dados.urlInicial,
+          inicio: resultado.inicio.toISOString(),
+          fim: resultado.fim.toISOString(),
+          artefatos: resultado.artefatos,
+          metadados: resultado.metadados,
+        };
         await this.publicador.publicar(
-          criarEvento(
-            'CapturaConcluida',
-            {
-              registroId,
-              usuarioId: pedido.dados.usuarioId,
-              sessaoId,
-              workerId: this.config.workerId,
-              urlInicial: pedido.dados.urlInicial,
-              inicio: resultado.inicio.toISOString(),
-              fim: resultado.fim.toISOString(),
-              artefatos: resultado.artefatos,
-              metadados: resultado.metadados,
-            },
-            meta,
-          ),
+          criarEvento('CapturaConcluida', { ...dados, assinaturaOrigem: assinarOrigem(dados, this.config.chaveOrigem) }, meta),
         );
         this.log.info('captura concluída', { registroId, artefatos: resultado.artefatos.length });
       } else {

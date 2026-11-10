@@ -27,7 +27,7 @@ function atendimento(fabrica: Partial<FabricaNavegadores> = {}) {
   const publicador = new PublicadorMemoria();
   const fab = { criar: vi.fn(), limparOrfaos: vi.fn(), ...fabrica } as unknown as FabricaNavegadores;
   const atender = new AtenderSolicitacao(
-    { workerId: 'w1', enderecoWorker: 'http://w1:7000', proxySaida: 'http://proxy:3128', idadeMaximaPedidoMs: 5 * 60_000, ociosidadeMaximaMs: 1000 },
+    { chaveOrigem: 'k', workerId: 'w1', enderecoWorker: 'http://w1:7000', proxySaida: 'http://proxy:3128', idadeMaximaPedidoMs: 5 * 60_000, ociosidadeMaximaMs: 1000 },
     fab,
     { enviar: vi.fn() },
     () => ({}) as never,

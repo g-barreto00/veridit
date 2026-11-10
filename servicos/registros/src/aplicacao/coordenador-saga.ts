@@ -54,6 +54,7 @@ export class CoordenadorSaga {
         usuarioId: r.usuarioId,
         sessaoId: e.dados.sessaoId,
         enderecoWorker: e.dados.enderecoWorker,
+        tokenSessao: e.dados.tokenSessao,
       },
       PRAZOS_MS.EM_CAPTURA!,
     );

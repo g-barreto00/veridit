@@ -56,6 +56,8 @@ export type SessaoIniciada = Envelope<
     workerId: string;
     /** Endereço interno do worker para o gateway encaminhar o WebSocket. */
     enderecoWorker: string;
+    /** Segredo da sessão: só quem o apresenta (o gateway) comanda o navegador. */
+    tokenSessao: string;
     iniciadaEm: string;
   }
 >;

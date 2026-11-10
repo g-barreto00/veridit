@@ -116,7 +116,7 @@ export class ConsumidorEventos {
 
     try {
       const resultado = await this.opcoes.guarda.executarUmaVez(evento, this.opcoes.fila, (transacao) =>
-        manipulador(evento, { transacao, tentativa }),
+        manipulador(evento, { transacao, tentativa, reentregue: msg.fields.redelivered }),
       );
       if (resultado === 'duplicado') {
         this.log.info('evento duplicado ignorado', { fila: this.opcoes.fila, id: evento.id, tipo: evento.tipo });

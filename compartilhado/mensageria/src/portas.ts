@@ -21,6 +21,8 @@ export interface ContextoConsumo {
   /** Transação aberta pela guarda de idempotência (undefined quando o consumidor não usa banco). */
   transacao?: PoolClient;
   tentativa: number;
+  /** O broker já entregou esta mensagem antes (ex.: o consumidor caiu sem dar ack). */
+  reentregue: boolean;
 }
 
 export type ManipuladorEvento<E extends Envelope = Envelope> = (

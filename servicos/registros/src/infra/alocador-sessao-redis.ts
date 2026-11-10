@@ -12,7 +12,7 @@ export class AlocadorSessaoRedis implements AlocadorSessao {
   constructor(private readonly redis: Redis) {}
 
   async registrar(
-    rota: { registroId: string; usuarioId: string; sessaoId: string; enderecoWorker: string },
+    rota: { registroId: string; usuarioId: string; sessaoId: string; enderecoWorker: string; tokenSessao: string },
     validadeMs: number,
   ) {
     await this.redis.set(PREFIXO_ROTA_SESSAO + rota.registroId, JSON.stringify(rota), 'PX', validadeMs);

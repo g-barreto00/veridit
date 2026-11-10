@@ -94,7 +94,7 @@ async function entregar(evento: EventoVeridit) {
 
 const meta = (registroId: string) => ({ correlationId: registroId, origem: 'teste' });
 const sessaoIniciada = (registroId: string) =>
-  criarEvento('SessaoIniciada', { registroId, sessaoId: 's1', workerId: 'w1', enderecoWorker: 'http://w1:7000', iniciadaEm: new Date().toISOString() }, meta(registroId));
+  criarEvento('SessaoIniciada', { registroId, sessaoId: 's1', workerId: 'w1', enderecoWorker: 'http://w1:7000', tokenSessao: 't', iniciadaEm: new Date().toISOString() }, meta(registroId));
 const capturaConcluida = (registroId: string) =>
   criarEvento('CapturaConcluida', { registroId, usuarioId: usuario, sessaoId: 's1', workerId: 'w1', urlInicial: 'https://exemplo.com', inicio: '', fim: '', artefatos: [], metadados: [] }, meta(registroId));
 const evidenciaSelada = (registroId: string) =>

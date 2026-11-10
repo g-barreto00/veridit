@@ -37,7 +37,10 @@ export interface CarteiraCreditos {
 
 /** Alocador de Sessão (C11): registra no gateway a rota sessão → worker. */
 export interface AlocadorSessao {
-  registrar(rota: { registroId: string; usuarioId: string; sessaoId: string; enderecoWorker: string }, validadeMs: number): Promise<void>;
+  registrar(
+    rota: { registroId: string; usuarioId: string; sessaoId: string; enderecoWorker: string; tokenSessao: string },
+    validadeMs: number,
+  ): Promise<void>;
   remover(registroId: string): Promise<void>;
 }
 

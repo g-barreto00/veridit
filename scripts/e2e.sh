@@ -74,6 +74,25 @@ verificar "rota interna não exposta" 404 "$(req -X POST -H "authorization: Bear
 verificar "escape de prefixo bloqueado" 400 "$(req --path-as-is -X POST -H "authorization: Bearer $TOKEN" $GW/api/creditos/../interno/reservas)"
 verificar "escape codificado bloqueado" 400 "$(req --path-as-is -X POST -H "authorization: Bearer $TOKEN" $GW/api/creditos/%2e%2e/interno/reservas)"
 
+saldo() { python3 -c 'import json; d=json.load(open("/tmp/resp.json")); print("%s/%s" % (d["disponivel"], d["reservado"]))'; }
+
+echo "REQ08 / REQ12 — registros"
+NOVO=$(json "titulo=Publicação em rede social" url=exemplo.com/post/1 tipo=TELA)
+verificar "iniciar registro" 202 "$(req -X POST -H "authorization: Bearer $TOKEN" $GW/api/registros -d "$NOVO")"
+REG=$(python3 -c 'import json; print(json.load(open("/tmp/resp.json"))["id"])')
+verificar "status aguardando sessão" AGUARDANDO_SESSAO "$(python3 -c 'import json; print(json.load(open("/tmp/resp.json"))["status"])')"
+req -H "authorization: Bearer $TOKEN" $GW/api/creditos/saldo >/dev/null
+verificar "1 crédito reservado" "4/1" "$(saldo)"
+VIDEO=$(json "titulo=Vídeo" url=exemplo.com tipo=VIDEO)
+verificar "vídeo ainda não disponível" 400 "$(req -X POST -H "authorization: Bearer $TOKEN" $GW/api/registros -d "$VIDEO")"
+verificar "listar registros" 200 "$(req -H "authorization: Bearer $TOKEN" "$GW/api/registros?status=andamento")"
+verificar "total em andamento" 1 "$(python3 -c 'import json; print(json.load(open("/tmp/resp.json"))["total"])')"
+verificar "detalhar registro" 200 "$(req -H "authorization: Bearer $TOKEN" $GW/api/registros/$REG)"
+verificar "cancelar registro" 200 "$(req -X POST -H "authorization: Bearer $TOKEN" $GW/api/registros/$REG/cancelar)"
+req -H "authorization: Bearer $TOKEN" $GW/api/creditos/saldo >/dev/null
+verificar "crédito estornado" "5/0" "$(saldo)"
+verificar "registros sem token" 401 "$(req $GW/api/registros)"
+
 echo "Renovação"
 verificar "renovar sessão" 200 "$(req -X POST $GW/api/auth/renovar)"
 TOKEN2=$(python3 -c 'import json; print(json.load(open("/tmp/resp.json"))["tokenAcesso"])')

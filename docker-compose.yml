@@ -37,6 +37,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: veridit
       RABBITMQ_DEFAULT_PASS: veridit_dev
+      # A sessão de captura segura a mensagem sem ack por até 30 min (prefetch 1, ADR-0009).
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit consumer_timeout 3600000
     volumes:
       - rabbit-dados:/var/lib/rabbitmq
     ports: ["5672:5672", "15672:15672"]
@@ -77,9 +79,10 @@ services:
       PORTA: "8080"
       URL_IDENTIDADE: http://identidade:3001
       URL_CREDITOS: http://creditos:3002
+      URL_REGISTROS: http://registros:3003
       REDIS_URL: redis://redis:6379
     ports: ["8080:8080"]
-    depends_on: [identidade, creditos, redis]
+    depends_on: [identidade, creditos, registros, redis]
     networks: [rede-interna]
 
   identidade:
@@ -103,6 +106,19 @@ services:
       AMQP_URL: amqp://veridit:veridit_dev@rabbitmq:5672
       # Premissa da sprint 1 (sem REQ05): créditos de boas-vindas no cadastro.
       CREDITOS_BOAS_VINDAS: "5"
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    networks: [rede-interna]
+
+  registros:
+    build: { context: ., args: { SERVICO: registros } }
+    environment:
+      PORTA: "3003"
+      DATABASE_URL: postgres://registros_app:registros_dev@postgres:5432/veridit
+      AMQP_URL: amqp://veridit:veridit_dev@rabbitmq:5672
+      URL_CREDITOS: http://creditos:3002
+      REDIS_URL: redis://redis:6379
     depends_on:
       postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }

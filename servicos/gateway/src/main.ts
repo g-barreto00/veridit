@@ -27,7 +27,8 @@ async function iniciar() {
     { prefixo: '/api/auth', destino: env('URL_IDENTIDADE') },
     { prefixo: '/api/usuarios', destino: env('URL_IDENTIDADE') },
     { prefixo: '/api/creditos', destino: env('URL_CREDITOS') },
-    // Próximos passos: registros, evidências e sessões de captura (WebSocket).
+    { prefixo: '/api/registros', destino: env('URL_REGISTROS') },
+    // Próximos passos: evidências e sessões de captura (WebSocket).
   ];
 
   const redis = new Redis(env('REDIS_URL'));

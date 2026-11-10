@@ -48,3 +48,13 @@ Organização em camadas: `dominio/` (regras, sem framework) → `aplicacao/` (c
 | **L** | `ConsultaInvariantesPg` reaproveita `Carteira.saldoDosLancamentos` | A regra de cálculo do saldo existe em um único lugar, usada tanto pelo domínio quanto pelo verificador |
 | **I** | Portas separadas: `RepositorioCarteiras`, `RepositorioReservas`, `PoliticaConsumo`, `ConsultaInvariantes` | `CreditarCarteira` não depende de reservas; `VerificarInvariantes` só depende da consulta |
 | **D** | Casos de uso recebem as portas; a montagem fica em [`composicao.ts`](../servicos/creditos/src/composicao.ts), usada pelo `main` e pelos testes de integração | Os testes trocam o relógio por um ajustável para simular expiração de reservas |
+
+## Serviço de Registros — Gestão (C10) e Orquestrador de Captura (C11)
+
+| Princípio | Onde | Por quê |
+|---|---|---|
+| **S** | [`Registro`](../servicos/registros/src/dominio/registro.ts) só conhece a máquina de estados do diagrama c11-estados; [`IniciarRegistro`](../servicos/registros/src/aplicacao/iniciar-registro.ts) só o início da saga; [`CoordenadorSaga`](../servicos/registros/src/aplicacao/coordenador-saga.ts) só as reações a eventos, cancelamento e prazos; [`ConsultarRegistros`](../servicos/registros/src/aplicacao/consultar-registros.ts) só leitura (REQ12) | A regra "não se pode cancelar enquanto sela" está num único lugar (tabela `TRANSICOES`) e é testada sem banco |
+| **O** | Tabela `TRANSICOES` e `PRAZOS_MS` em [`registro.ts`](../servicos/registros/src/dominio/registro.ts); `TIPOS_HABILITADOS` em `IniciarRegistro` | Habilitar o vídeo (REQ09, sprint 2) é acrescentar `'VIDEO'` à lista; um novo estado é uma entrada na tabela |
+| **L** | [`ClienteCarteiraHttp`](../servicos/registros/src/infra/cliente-carteira-http.ts) e `CarteiraFalsa` (teste); [`AlocadorSessaoRedis`](../servicos/registros/src/infra/alocador-sessao-redis.ts) e `AlocadorFalso` | A saga se comporta igual com o cliente HTTP real ou com o dublê; os 11 testes de integração exercitam a saga inteira sem subir o serviço de Créditos |
+| **I** | `CarteiraCreditos` expõe só `reservar/consumir/estornar`; `AlocadorSessao` só `registrar/remover` ([`portas.ts`](../servicos/registros/src/dominio/portas.ts)) | Registros não depende de saldo, extrato ou de qualquer outra operação da Carteira |
+| **D** | Saga e casos de uso dependem das portas; [`composicao.ts`](../servicos/registros/src/composicao.ts) recebe carteira e alocador por parâmetro | A chamada síncrona à Carteira (ADR-0008) poderia virar mensageria sem alterar a saga |

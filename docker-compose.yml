@@ -8,8 +8,12 @@ networks:
   rede-interna:
   # ADR-0003 (opção b): rede dos navegadores efêmeros. Só tem saída para a internet;
   # nenhum serviço interno está nela, exceto os workers de captura (que ficam nas duas).
+  # Sem rota para fora (internal); a única saída é o proxy-saida, que recusa destinos internos.
   rede-captura:
     name: veridit-rede-captura
+    internal: true
+  # Rede só do proxy de saída, com acesso à internet.
+  rede-saida:
 
 volumes:
   pg-dados:
@@ -123,6 +127,47 @@ services:
       postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
     networks: [rede-interna]
+
+  # ADR-0003: proxy de saída dos navegadores. Recusa IPs privados/loopback/link-local.
+  proxy-saida:
+    build: ./infra/proxy-saida
+    environment:
+      TOKEN_CONSULTA: consulta_proxy_dev
+    networks: [rede-captura, rede-saida]
+
+  # Só constrói a imagem do navegador efêmero (veridit-navegador) e encerra. Os contêineres de
+  # navegador de verdade são criados pelo worker, um por sessão (ADR-0003, opção b).
+  navegador-imagem:
+    build: ./infra/navegador
+    image: veridit-navegador:1.64.1
+    command: ["true"]
+    network_mode: none
+
+  # Motor de Captura (C12). ADR-0009: workers sem estado; em desenvolvimento, réplicas fixas.
+  # ADR-0002: sem acesso a banco — só broker, armazenamento de objetos e navegadores.
+  captura:
+    build: { context: ., dockerfile: servicos/captura/Dockerfile }
+    deploy:
+      replicas: 2
+    user: root   # acesso ao socket do Docker para criar/destruir os navegadores
+    environment:
+      PORTA: "7000"
+      AMQP_URL: amqp://veridit:veridit_dev@rabbitmq:5672
+      REDE_INTERNA: veridit_rede-interna
+      REDE_CAPTURA: veridit-rede-captura
+      IMAGEM_NAVEGADOR: veridit-navegador:1.64.1
+      S3_ENDPOINT: http://localstack:4566
+      BUCKET_TEMPORARIO: captura-temporaria
+      NTP_SERVIDOR: a.ntp.br
+      PROXY_SAIDA: http://proxy-saida:3128
+      TOKEN_CONSULTA_PROXY: consulta_proxy_dev
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      navegador-imagem: { condition: service_completed_successfully }
+      proxy-saida: { condition: service_started }
+    networks: [rede-interna, rede-captura]
 
   notificacoes:
     build: { context: ., args: { SERVICO: notificacoes } }

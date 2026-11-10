@@ -3,6 +3,9 @@ import { Envelope } from './envelope';
 /** Modo da sessão de captura (ADR-0003). A gravação de vídeo (REQ09) usa o mesmo modo SESSAO. */
 export type TipoArtefato = 'IMAGEM' | 'VIDEO' | 'METADADOS';
 
+/** O que o usuário escolheu registrar (REQ08, tela 10). */
+export type TipoRegistro = 'TELA' | 'VIDEO';
+
 export interface MetadadosTecnicos {
   urlFinal: string;
   ipDestino?: string;
@@ -37,6 +40,7 @@ export type CapturaSolicitada = Envelope<
   {
     registroId: string;
     usuarioId: string;
+    tipo: TipoRegistro;
     urlInicial: string;
     duracaoMaximaSegundos: number;
   }
@@ -108,6 +112,7 @@ export type RegistroConcluido = Envelope<
   {
     registroId: string;
     usuarioId: string;
+    tipo: TipoRegistro;
     titulo: string;
     concluidoEm: string;
   }

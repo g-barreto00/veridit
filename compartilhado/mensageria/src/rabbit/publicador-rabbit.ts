@@ -1,6 +1,6 @@
 import type { AmqpConnectionManager, ChannelWrapper } from 'amqp-connection-manager';
 import type { ConfirmChannel } from 'amqplib';
-import { EXCHANGE_EVENTOS, routingKey, type Envelope, type TipoEvento } from '@veridit/contratos';
+import { EXCHANGE_EVENTOS, FILAS, routingKey, type Envelope, type TipoEvento } from '@veridit/contratos';
 import type { PublicadorEventos } from '../portas';
 
 /**
@@ -14,7 +14,14 @@ export class PublicadorRabbit implements PublicadorEventos {
     this.canal = conexao.createChannel({
       json: false,
       confirm: true,
-      setup: (ch: ConfirmChannel) => ch.assertExchange(EXCHANGE_EVENTOS, 'topic', { durable: true }),
+      setup: async (ch: ConfirmChannel) => {
+        await ch.assertExchange(EXCHANGE_EVENTOS, 'topic', { durable: true });
+        // Garante as filas dos consumidores antes de publicar (ver FILAS em @veridit/contratos).
+        for (const [fila, tipos] of Object.entries(FILAS)) {
+          await ch.assertQueue(fila, { durable: true });
+          for (const tipo of tipos) await ch.bindQueue(fila, EXCHANGE_EVENTOS, routingKey(tipo));
+        }
+      },
     });
   }
 

@@ -10,6 +10,7 @@ import { env, envNumero } from '@veridit/plataforma';
 import { CABECALHOS_INTERNOS, autenticacao, caminhoSeguro, correlacao, limitePorIp } from './middlewares';
 import { resolverDestino, type Rota } from './rotas';
 import { LimitadorRedis, ListaRevogacaoRedis, ValidadorJwks } from './seguranca';
+import { proxySessoes } from './sessoes-ws';
 
 @Controller('api')
 class SaudeControlador {
@@ -28,7 +29,7 @@ async function iniciar() {
     { prefixo: '/api/usuarios', destino: env('URL_IDENTIDADE') },
     { prefixo: '/api/creditos', destino: env('URL_CREDITOS') },
     { prefixo: '/api/registros', destino: env('URL_REGISTROS') },
-    // Próximos passos: evidências e sessões de captura (WebSocket).
+    // Próximo passo: evidências (relatório e .zip, sprint 2).
   ];
 
   const redis = new Redis(env('REDIS_URL'));
@@ -85,6 +86,9 @@ async function iniciar() {
     },
   });
   app.use(proxy);
+
+  // Sessões de captura: WebSocket encaminhado ao worker que atende a sessão (ADR-0003).
+  proxySessoes(app.getHttpServer(), validador, revogacao, redis);
 
   const porta = envNumero('PORTA', 8080);
   await app.listen(porta);

@@ -1,0 +1,23 @@
+{
+  "name": "@veridit/mensageria",
+  "version": "0.1.0",
+  "description": "Outbox transacional, publicador com confirmação, consumidor idempotente com retentativas e DLQ (ADR-0007).",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@veridit/contratos": "0.1.0",
+    "amqp-connection-manager": "^5.0.1",
+    "amqplib": "^0.10.8",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.8",
+    "@types/pg": "^8.15.0",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4"
+  }
+}

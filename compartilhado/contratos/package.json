@@ -1,0 +1,13 @@
+{
+  "name": "@veridit/contratos",
+  "version": "0.1.0",
+  "description": "Contratos compartilhados entre serviços (eventos versionados e filas). ADR-0002 e ADR-0007.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@veridit/gateway",
+  "version": "0.1.0",
+  "description": "API Gateway: roteamento, validação do JWT (JWKS), lista de revogação e limite de tentativas (ADR-0002, ADR-0005)",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "@veridit/plataforma": "0.1.0",
+    "http-proxy-middleware": "^3.0.5",
+    "ioredis": "^5.6.1",
+    "jose": "^5.10.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4"
+  }
+}

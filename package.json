@@ -1,0 +1,20 @@
+{
+  "name": "veridit",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Veridit — registro de conteúdo da web como evidência (Trabalho III, ESA/UFBA)",
+  "workspaces": [
+    "compartilhado/*",
+    "servicos/*",
+    "web"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "infra:up": "docker compose up -d postgres rabbitmq redis localstack mailpit",
+    "infra:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

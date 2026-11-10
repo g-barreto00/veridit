@@ -1,0 +1,105 @@
+# Veridit — ambiente de desenvolvimento
+# ADR-0009: em desenvolvimento, Docker Compose com réplicas fixas no lugar de Kubernetes/KEDA.
+
+name: veridit
+
+networks:
+  # Rede dos serviços, banco, broker e armazenamento.
+  rede-interna:
+  # ADR-0003 (opção b): rede dos navegadores efêmeros. Só tem saída para a internet;
+  # nenhum serviço interno está nela, exceto os workers de captura (que ficam nas duas).
+  rede-captura:
+    name: veridit-rede-captura
+
+volumes:
+  pg-dados:
+  rabbit-dados:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: veridit
+      POSTGRES_USER: veridit_admin
+      POSTGRES_PASSWORD: admin_dev
+    volumes:
+      - pg-dados:/var/lib/postgresql/data
+      - ./infra/postgres:/docker-entrypoint-initdb.d:ro
+    ports: ["5432:5432"]
+    networks: [rede-interna]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veridit_admin -d veridit"]
+      interval: 5s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: veridit
+      RABBITMQ_DEFAULT_PASS: veridit_dev
+    volumes:
+      - rabbit-dados:/var/lib/rabbitmq
+    ports: ["5672:5672", "15672:15672"]
+    networks: [rede-interna]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    networks: [rede-interna]
+
+  localstack:
+    image: localstack/localstack:3.8
+    environment:
+      SERVICES: kms,s3
+      RETENCAO_EVIDENCIAS_DIAS: "1"
+    volumes:
+      - ./infra/localstack:/etc/localstack/init/ready.d:ro
+    ports: ["4566:4566"]
+    networks: [rede-interna]
+
+  mailpit:
+    image: axllent/mailpit:v1.20
+    ports: ["8025:8025", "1025:1025"]
+    networks: [rede-interna]
+
+  # ---------------------------------------------------------------------------
+  # Serviços do Veridit (ADR-0002). Só o gateway expõe porta para fora.
+  # Chaves e senhas abaixo valem SOMENTE para desenvolvimento.
+  # ---------------------------------------------------------------------------
+
+  gateway:
+    build: { context: ., args: { SERVICO: gateway } }
+    environment:
+      PORTA: "8080"
+      URL_IDENTIDADE: http://identidade:3001
+      REDIS_URL: redis://redis:6379
+    ports: ["8080:8080"]
+    depends_on: [identidade, redis]
+    networks: [rede-interna]
+
+  identidade:
+    build: { context: ., args: { SERVICO: identidade } }
+    environment:
+      PORTA: "3001"
+      DATABASE_URL: postgres://identidade_app:identidade_dev@postgres:5432/veridit
+      AMQP_URL: amqp://veridit:veridit_dev@rabbitmq:5672
+      CHAVE_CRIPTO_CAMPO: 5J0rqnnk87sJA441FlCFANWRvtgMXpS0z/ytamX1GEg=
+      CHAVE_INDICE_CAMPO: 50ASpU2CsYZ3jSgeE10X2eJ6qut9NnkFKVxXHnsZMNs=
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    networks: [rede-interna]
+
+  notificacoes:
+    build: { context: ., args: { SERVICO: notificacoes } }
+    environment:
+      AMQP_URL: amqp://veridit:veridit_dev@rabbitmq:5672
+      SMTP_URL: smtp://mailpit:1025
+      URL_WEB: http://localhost:5173
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    networks: [rede-interna]

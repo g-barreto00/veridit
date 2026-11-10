@@ -73,9 +73,17 @@ services:
     networks: [rede-interna]
 
   # ---------------------------------------------------------------------------
-  # Serviços do Veridit (ADR-0002). Só o gateway expõe porta para fora.
+  # Serviços do Veridit (ADR-0002). Só a aplicação web (5173) e o gateway (8080)
+  # expõem porta para fora.
   # Chaves e senhas abaixo valem SOMENTE para desenvolvimento.
   # ---------------------------------------------------------------------------
+
+  # Aplicação Web (C01): http://localhost:5173
+  web:
+    build: { context: ., dockerfile: web/Dockerfile }
+    ports: ["5173:80"]
+    depends_on: [gateway]
+    networks: [rede-interna]
 
   gateway:
     build: { context: ., args: { SERVICO: gateway } }

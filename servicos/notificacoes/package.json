@@ -1,0 +1,22 @@
+{
+  "name": "@veridit/notificacoes",
+  "version": "0.1.0",
+  "description": "Serviço de Notificações: consome eventos e envia e-mails (ADR-0002, ADR-0005; REQ07/REQ10/REQ11-B na sprint 2)",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@veridit/contratos": "0.1.0",
+    "@veridit/mensageria": "0.1.0",
+    "@veridit/plataforma": "0.1.0",
+    "nodemailer": "^6.10.1"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.17",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4"
+  }
+}

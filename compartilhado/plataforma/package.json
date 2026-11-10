@@ -1,0 +1,19 @@
+{
+  "name": "@veridit/plataforma",
+  "version": "0.1.0",
+  "description": "Utilitários técnicos comuns aos serviços: configuração, pool PostgreSQL, migrações e criptografia de campo (ADR-0010). Sem regras de domínio.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.0",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@veridit/identidade",
+  "version": "0.1.0",
+  "description": "Serviço de Identidade e Acesso (REQ01, REQ03, REQ04; ADR-0005)",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "@node-rs/argon2": "^2.0.2",
+    "@veridit/contratos": "0.1.0",
+    "@veridit/mensageria": "0.1.0",
+    "@veridit/plataforma": "0.1.0",
+    "cookie-parser": "^1.4.7",
+    "jose": "^5.10.0",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
+    "@types/express": "^5.0.0",
+    "@types/pg": "^8.15.0",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4"
+  }
+}

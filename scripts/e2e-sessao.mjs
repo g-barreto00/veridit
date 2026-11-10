@@ -153,9 +153,24 @@ enviar({ tipo: 'concluir' });
 const fim = await aguardarMsg('encerrada');
 verificar('sessão concluída', fim?.resultado === 'concluida', fim?.mensagem);
 
-const s2 = await aguardarStatus(token, id, 'SELANDO', 15_000);
-verificar('registro foi para Selando', s2 === 'SELANDO', s2);
 verificar('rota da sessão removida', (await statusConexao(id, token)) === 404);
+
+console.log('ADR-0004 — selagem');
+const t0 = Date.now();
+const s2 = await aguardarStatus(token, id, 'CONCLUIDO', 60_000);
+verificar('registro Concluído após a selagem', s2 === 'CONCLUIDO', `${s2}, ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+const saldo = (await api('GET', '/api/creditos/saldo', { token })).corpo;
+verificar('crédito consumido', saldo.disponivel === 4 && saldo.reservado === 0, `${saldo.disponivel}/${saldo.reservado}`);
+const ev = await api('GET', `/api/evidencias/${id}`, { token });
+verificar('evidência disponível', ev.status === 200);
+const v = ev.corpo.verificacao ?? {};
+verificar('hashes dos arquivos conferem', v.arquivosIntegros === true);
+verificar('hash do manifesto confere', v.manifestoIntegro === true);
+verificar('assinatura do manifesto (KMS) válida', v.assinaturaValida === true);
+verificar('carimbo do tempo confere com o manifesto', v.carimboConfere === true, ev.corpo.carimbo && `${ev.corpo.carimbo.autoridade} ${ev.corpo.carimbo.horario}`);
+verificar('outro usuário não vê a evidência', (await api('GET', `/api/evidencias/${id}`, { token: outro })).status === 404);
+const lista = (await api('GET', '/api/registros?status=concluido', { token })).corpo;
+verificar('listagem mostra o registro concluído com 2 imagens', lista.itens?.[0]?.quantidadeImagens === 2);
 
 console.log(falhas ? `\n${falhas} cenário(s) falharam.` : '\nTodos os cenários passaram.');
 console.log(`registroId=${id}`);

@@ -29,7 +29,7 @@ async function iniciar() {
     { prefixo: '/api/usuarios', destino: env('URL_IDENTIDADE') },
     { prefixo: '/api/creditos', destino: env('URL_CREDITOS') },
     { prefixo: '/api/registros', destino: env('URL_REGISTROS') },
-    // Próximo passo: evidências (relatório e .zip, sprint 2).
+    { prefixo: '/api/evidencias', destino: env('URL_EVIDENCIAS') },
   ];
 
   const redis = new Redis(env('REDIS_URL'));

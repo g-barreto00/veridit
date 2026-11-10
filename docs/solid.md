@@ -68,3 +68,13 @@ Organização em camadas: `dominio/` (regras, sem framework) → `aplicacao/` (c
 | **L** | `GuardaSemEstado` no lugar da guarda PostgreSQL | O worker usa o mesmo `ConsumidorEventos` dos outros serviços sem ter banco (ADR-0009) |
 | **I** | [`portas.ts`](../servicos/captura/src/portas.ts): `FabricaNavegadores`, `ArmazenamentoTemporario`, `RelogioNtp`, `ResolvedorDns`, `RegistroConexoes` | A sessão não sabe nada de Docker; o coletor não sabe nada de S3 |
 | **D** | Tudo é injetado no [`main.ts`](../servicos/captura/src/main.ts); os testes usam uma fábrica falsa | Em produção a fábrica viraria um *Job/Pod* do Kubernetes (ADR-0009) sem tocar na sessão |
+
+## Serviço de Evidências — Selagem (C13) e Repositório (C14), ADR-0004
+
+| Princípio | Onde | Por quê |
+|---|---|---|
+| **S** | [`SelarEvidencia`](../servicos/evidencias/src/aplicacao/selar-evidencia.ts) orquestra os 6 passos da ADR; cada passo técnico é uma classe: [`CarimboRfc3161`](../servicos/evidencias/src/infra/carimbo-rfc3161.ts), [`AssinadorKms`, `ArmazenamentoS3`, `VerificadorOrigemHmac`](../servicos/evidencias/src/infra/adaptadores.ts), [`RegistroCustodiaPg`](../servicos/evidencias/src/infra/repositorios-pg.ts); a verificação é outro caso de uso ([`VerificarEvidencia`](../servicos/evidencias/src/aplicacao/verificar-evidencia.ts)) | Cada subcomponente do C13 (Verificador de Origem, Calculador de Hash, Construtor de Manifesto, Assinador, Cliente de Carimbo, Registro de Custódia) tem um único motivo para mudar |
+| **O** | Autoridade de carimbo e chave de assinatura são configuração | Trocar o FreeTSA por uma ACT ICP-Brasil é mudar `URL_CARIMBO_TEMPO`; trocar o LocalStack por um KMS/HSM real é mudar o endpoint — o caso de uso não muda |
+| **L** | Os testes trocam KMS, S3, autoridade de carimbo e banco por dublês em memória | `SelarEvidencia` é testado inteiro (ordem dos passos, idempotência, adulteração, origem falsa) sem nenhum serviço externo |
+| **I** | [`portas.ts`](../servicos/evidencias/src/dominio/portas.ts): `Assinador`, `CarimboTempo`, `ArmazenamentoEvidencias`, `VerificadorOrigem`, `RegistroCustodia`, `RepositorioEvidencias` | `VerificarEvidencia` não depende do assinador nem da custódia; só lê e confere |
+| **D** | O caso de uso depende das portas; o [`main.ts`](../servicos/evidencias/src/main.ts) escolhe as implementações | A regra "só fica Concluído depois de selado" não conhece AWS, FreeTSA nem PostgreSQL |

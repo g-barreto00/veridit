@@ -84,9 +84,10 @@ services:
       URL_IDENTIDADE: http://identidade:3001
       URL_CREDITOS: http://creditos:3002
       URL_REGISTROS: http://registros:3003
+      URL_EVIDENCIAS: http://evidencias:3004
       REDIS_URL: redis://redis:6379
     ports: ["8080:8080"]
-    depends_on: [identidade, creditos, registros, redis]
+    depends_on: [identidade, creditos, registros, evidencias, redis]
     networks: [rede-interna]
 
   identidade:
@@ -160,6 +161,8 @@ services:
       BUCKET_TEMPORARIO: captura-temporaria
       NTP_SERVIDOR: a.ntp.br
       PROXY_SAIDA: http://proxy-saida:3128
+      # Verificador de Origem (C13): mesma chave no worker e no serviço de Evidências.
+      CHAVE_ORIGEM_CAPTURA: ebce0d3d9ce6558e492c615e2f91642d719136bf1fab105facbb4f391aa294e4
       TOKEN_CONSULTA_PROXY: consulta_proxy_dev
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -168,6 +171,27 @@ services:
       navegador-imagem: { condition: service_completed_successfully }
       proxy-saida: { condition: service_started }
     networks: [rede-interna, rede-captura]
+
+  # Evidências (S5): selagem (C13) e repositório imutável (C14), ADR-0004.
+  evidencias:
+    build: { context: ., args: { SERVICO: evidencias } }
+    environment:
+      PORTA: "3004"
+      DATABASE_URL: postgres://evidencias_app:evidencias_dev@postgres:5432/veridit
+      AMQP_URL: amqp://veridit:veridit_dev@rabbitmq:5672
+      S3_ENDPOINT: http://localstack:4566
+      KMS_ENDPOINT: http://localstack:4566
+      KMS_CHAVE: alias/veridit-selagem
+      BUCKET_TEMPORARIO: captura-temporaria
+      BUCKET_EVIDENCIAS: evidencias
+      # Desvio acordado (ADR-0004): FreeTSA no lugar de uma ACT ICP-Brasil.
+      URL_CARIMBO_TEMPO: https://freetsa.org/tsr
+      CHAVE_ORIGEM_CAPTURA: ebce0d3d9ce6558e492c615e2f91642d719136bf1fab105facbb4f391aa294e4
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      localstack: { condition: service_healthy }
+    networks: [rede-interna]
 
   notificacoes:
     build: { context: ., args: { SERVICO: notificacoes } }

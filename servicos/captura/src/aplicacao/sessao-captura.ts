@@ -88,9 +88,8 @@ export class SessaoCaptura {
     this.timers.push(setTimeout(() => void this.falhar('Duração máxima da sessão atingida'), this.dados.duracaoMaximaMs));
     this.timers.push(
       setInterval(() => {
-        const restante = Math.max(0, this.dados.duracaoMaximaMs - (Date.now() - this.inicio.getTime()));
-        this.enviar({ tipo: 'tempo', restanteSegundos: Math.round(restante / 1000) });
-      }, 5000),
+        this.enviar({ tipo: 'tempo', restanteSegundos: this.restanteSegundos() });
+      }, 1000),
     );
     this.armarOciosidade();
   }
@@ -120,6 +119,7 @@ export class SessaoCaptura {
       altura: VIEWPORT.height,
       capturas: this.artefatos.filter((a) => a.tipo === 'IMAGEM').length,
     });
+    this.enviar({ tipo: 'tempo', restanteSegundos: this.restanteSegundos() });
     await this.iniciarScreencast();
   }
 
@@ -200,7 +200,21 @@ export class SessaoCaptura {
         url: meta.urlFinal,
       });
       this.metadados.push(meta);
-      this.enviar({ tipo: 'captura', numero, url: meta.urlFinal, tamanhoBytes: imagem.length });
+      this.enviar({
+        tipo: 'captura',
+        numero,
+        nomeArquivo,
+        url: meta.urlFinal,
+        tamanhoBytes: imagem.length,
+        // Resumo para o painel "Metadados coletados" (tela 11)
+        metadados: {
+          ip: meta.ipDestino,
+          dns: meta.dns,
+          tls: meta.certificadoTls,
+          horario: meta.horarioNtp ?? meta.horarioSistema,
+          fonteHorario: meta.fonteHorario,
+        },
+      });
     } finally {
       this.capturando = false;
     }
@@ -257,6 +271,10 @@ export class SessaoCaptura {
     this.cliente?.close(1000, 'Sessão encerrada');
     await this.contexto?.close().catch(() => undefined);
     this.resolver(resultado);
+  }
+
+  private restanteSegundos() {
+    return Math.round(Math.max(0, this.dados.duracaoMaximaMs - (Date.now() - this.inicio.getTime())) / 1000);
   }
 
   private armarOciosidade() {

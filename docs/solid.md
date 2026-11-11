@@ -1,6 +1,32 @@
 # Princípios SOLID no Veridit
 
-Onde cada princípio foi aplicado e por quê. Atualizado a cada módulo implementado.
+Onde cada princípio foi aplicado em cada parte do sistema, e por quê.
+
+## Visão geral
+
+Todos os serviços seguem a mesma organização, que é a base para os cinco princípios:
+
+```
+servicos/<serviço>/src/
+  dominio/     regras de negócio e PORTAS (interfaces) — sem framework, sem banco, sem HTTP
+  aplicacao/   casos de uso: um por classe, recebem as portas no construtor
+  infra/       ADAPTADORES: implementações das portas (PostgreSQL, RabbitMQ, KMS, S3, Docker...)
+  http/        controladores NestJS: só traduzem HTTP ⇄ caso de uso
+  main.ts      ponto de composição: o único lugar que conhece as classes concretas
+```
+
+| Princípio | Resumo de como aparece | Exemplo mais claro |
+|---|---|---|
+| **S** — Responsabilidade única | Um caso de uso por classe; cada subcomponente do documento arquitetural vira uma classe | `CadastrarUsuario`, `AutenticarUsuario`, `RenovarSessao`, `EncerrarSessao` (Identidade) |
+| **O** — Aberto/fechado | Comportamento novo entra como nova classe ou entrada de tabela, sem alterar o que existe | `RegraPerfil` (D1: empresa no futuro), tabela `COMANDOS` da sessão (vídeo na sprint 2), tabela `TRANSICOES` da saga |
+| **L** — Substituição de Liskov | Implementações reais e dublês de teste são intercambiáveis | 66 testes rodam os casos de uso com repositórios em memória; worker usa `GuardaSemEstado` no lugar da guarda PostgreSQL |
+| **I** — Segregação de interfaces | Portas pequenas e específicas, em vez de um "serviço" com tudo | `CarteiraCreditos` expõe só `reservar/consumir/estornar` para o Registros |
+| **D** — Inversão de dependência | Casos de uso dependem de interfaces; o `main.ts` injeta as implementações | `SelarEvidencia` não conhece AWS, FreeTSA nem PostgreSQL |
+
+Os testes são a prova prática do D e do L: como os casos de uso dependem de interfaces, eles são testados com
+dublês em memória ([`servicos/identidade/test/dubles.ts`](../servicos/identidade/test/dubles.ts)), sem subir banco, broker ou KMS.
+
+---
 
 ## Pacote `@veridit/mensageria` (ADR-0007)
 
@@ -78,3 +104,11 @@ Organização em camadas: `dominio/` (regras, sem framework) → `aplicacao/` (c
 | **L** | Os testes trocam KMS, S3, autoridade de carimbo e banco por dublês em memória | `SelarEvidencia` é testado inteiro (ordem dos passos, idempotência, adulteração, origem falsa) sem nenhum serviço externo |
 | **I** | [`portas.ts`](../servicos/evidencias/src/dominio/portas.ts): `Assinador`, `CarimboTempo`, `ArmazenamentoEvidencias`, `VerificadorOrigem`, `RegistroCustodia`, `RepositorioEvidencias` | `VerificarEvidencia` não depende do assinador nem da custódia; só lê e confere |
 | **D** | O caso de uso depende das portas; o [`main.ts`](../servicos/evidencias/src/main.ts) escolhe as implementações | A regra "só fica Concluído depois de selado" não conhece AWS, FreeTSA nem PostgreSQL |
+
+## Aplicação Web (C01)
+
+| Princípio | Onde | Por quê |
+|---|---|---|
+| **S** | [`ClienteApi`](../web/src/api/cliente.ts) cuida só de HTTP, token e renovação; [`ProvedorSessao`](../web/src/sessao.tsx) só do estado do usuário e do saldo; cada tela é um componente | As telas não sabem como o token é guardado nem renovado (ADR-0005) |
+| **O** | Mapa `STATUS` em [`comuns.tsx`](../web/src/componentes/comuns.tsx) (rótulo e cor de cada estado da saga) | Um novo estado do registro é uma linha no mapa, não um `if` em cada tela |
+| **D** | As telas usam `api.requisitar`/`useSessao`, não `fetch` diretamente | Trocar o transporte ou a política de renovação muda um único arquivo |

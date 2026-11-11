@@ -3,7 +3,7 @@
 - **Status:** Aceita. Substitui parcialmente a [ADR-0004](https://github.com/cauaalmeida01/projeto2/blob/main/docs/arquitetura/adr/0004-selagem-das-evidencias.md), somente no passo 4 (autoridade do carimbo do tempo)
 - **Data:** 2026-11-10
 - **Decisores:** Daniel Santana, Davi Guimarães, Gabriel Barreto e Leone de Castro (equipe implementadora)
-- **De acordo da equipe autora da arquitetura:** Cauã Marinho, João Ferraz, Guilherme Loiola e Davi Araújo. Concordância dada em sala, na sessão supervisionada de 2026-11-10, por <!-- nome do integrante da equipe autora presente -->
+- **De acordo da equipe autora da arquitetura:** Cauã Marinho, João Ferraz, Guilherme Loiola e Davi Araújo. Concordância dada em sala, na sessão supervisionada de 2026-11-10, por Cauã Marinho
 - **Características arquiteturais relacionadas:** Integridade e autenticidade das evidências (ADR-0001), Custo, Interoperabilidade
 - **Requisitos e restrições relacionados:** REQ11 (concluir captura de tela), REQ09 (concluir gravação; próxima sprint), REQ14 e REQ15 (relatório e .zip com o carimbo; próxima sprint); restrição do projeto: trabalho acadêmico, sem orçamento para contratar serviços
 
@@ -89,7 +89,7 @@ quando houver orçamento.
 - Histórico: registro criado em 2026-11-10, na sessão supervisionada, com o de acordo da equipe autora.
 - ADRs relacionadas: ADR-0004 (substituída parcialmente, só no passo 4), ADR-0001 (integridade), ADR-0007
   (retentativas e saga).
-- A ADR-0004 continua sendo do repositório da equipe autora; cabe a ela anotar lá a substituição parcial por
-  esta ADR.
+- A ADR-0004 permanece no repositório da equipe autora, sem alteração; a substituição parcial fica registrada
+  nesta ADR.
 - Elaborada em sala com apoio de ferramenta de IA (Claude Code), em 2026-11-10; a equipe avaliou e assume a
   decisão. Registro da interação: <!-- local do registro da interação com IA -->.

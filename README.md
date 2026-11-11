@@ -10,7 +10,8 @@ A implementação segue a arquitetura definida por outra equipe no Trabalho II:
 | Documento | Conteúdo |
 |---|---|
 | [docs/requisitos-sprint1.md](docs/requisitos-sprint1.md) | Requisitos implementados nesta sprint, critérios de aceite e o que ficou para a próxima |
-| [docs/arquitetura-implementada.md](docs/arquitetura-implementada.md) | Como cada ADR foi implementada, desvios e pontos a registrar em ADR |
+| [docs/arquitetura-implementada.md](docs/arquitetura-implementada.md) | Como cada ADR foi implementada, desvios e decisões de implementação |
+| [docs/adr/](docs/adr/README.md) | ADR-0011 (carimbo do tempo pelo FreeTSA), com o de acordo da equipe autora |
 | [docs/solid.md](docs/solid.md) | Onde cada princípio SOLID foi aplicado e por quê |
 | [docs/telas-implementadas/](docs/telas-implementadas/) | Capturas das telas, geradas pelo teste em navegador real |
 

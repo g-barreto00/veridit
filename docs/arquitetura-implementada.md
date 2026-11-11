@@ -13,7 +13,7 @@ Este documento registra como cada ADR foi implementada e lista os pontos levados
 | 0001 | Top 4: segurança, integridade, confiabilidade, escalabilidade | Seguida. Cada característica tem teste automatizado (ver README, "Testes") |
 | 0002 | Estilo baseado em serviços com mensageria assíncrona | Seguida: Identidade, Créditos, Registros, Captura, Evidências e Notificações separados, com API Gateway, REST síncrono e eventos assíncronos. Auditoria fica para a próxima sprint |
 | 0003 | Captura em navegador remoto isolado no servidor | Seguida, com **sessão interativa** (screencast + mouse/teclado por WebSocket) e um contêiner Chromium efêmero por sessão (opção "b", combinada com a equipe autora: navegador em contêiner separado do worker) |
-| 0004 | SHA-256, manifesto assinado, carimbo do tempo, WORM, custódia | Seguida, exceto a autoridade de carimbo (**desvio 1**) |
+| 0004 | SHA-256, manifesto assinado, carimbo do tempo, WORM, custódia | Seguida, exceto a autoridade de carimbo (**desvio 1**, [ADR-0011](adr/0011-carimbo-do-tempo-freetsa.md)) |
 | 0005 | JWT curto + refresh revogável; Argon2id | Seguida integralmente, inclusive verificação de e-mail e bloqueio progressivo |
 | 0006 | Pagamentos via Mercado Pago | Próxima sprint (REQ05–REQ07 fora do escopo) |
 | 0007 | Outbox, filas duráveis, DLQ, saga | Seguida: outbox transacional, consumidores idempotentes, retentativas com backoff, DLQ e saga orquestrada pelo Registros |
@@ -30,7 +30,7 @@ Este documento registra como cada ADR foi implementada e lista os pontos levados
 - **Motivo:** o serviço credenciado é pago e exige contratação.
 - **Impacto:** o formato e a verificação são os mesmos (`openssl ts -verify`). Trocar a autoridade é mudar a
   variável `URL_CARIMBO_TEMPO`.
-- **Situação:** acordado com a equipe autora; **ADR a registrar em sala**, substituindo esse trecho da ADR-0004.
+- **Situação:** registrado na [ADR-0011](adr/0011-carimbo-do-tempo-freetsa.md) (Aceita, 2026-11-10), em sala, com o de acordo da equipe autora. Substitui parcialmente a ADR-0004, só no passo 4.
 
 ## Equivalências tecnológicas (premissa P5 do documento: tecnologias são exemplos)
 
@@ -41,10 +41,11 @@ Este documento registra como cada ADR foi implementada e lista os pontos levados
 | Kubernetes + KEDA (ADR-0009) | Docker Compose com 2 réplicas | Previsto na própria ADR para desenvolvimento |
 | RabbitMQ, PostgreSQL, Playwright | Os mesmos | — |
 
-## Pontos levados à sessão em sala
+## Decisões de implementação (sem ADR)
 
-Não são desvios da decisão, mas de forma ou de leitura de um item de Conformidade. Cabe à equipe autora
-dizer se aceita como estão ou se prefere registrar em ADR.
+Não são desvios da decisão, mas de forma ou de leitura de um item de Conformidade. Foram apresentados na
+sessão em sala de 2026-11-10; a equipe decidiu registrar em ADR apenas o desvio 1 (ADR-0011) e manter estes
+pontos documentados aqui.
 
 1. **Verificador de Origem (Conformidade da ADR-0003 cita mTLS).** Implementado com HMAC-SHA256 do evento
    `CapturaConcluida`, com uma chave compartilhada só entre workers de captura e o serviço de Evidências, e com o

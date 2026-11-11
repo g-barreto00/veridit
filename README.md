@@ -144,5 +144,7 @@ nem alteradas fora das sessões em sala.
 
 ## Equipe
 
-<!-- Preencher com os nomes da equipe. -->
+- Daniel Santana
+- Davi Guimarães
 - Gabriel Barreto
+- Leone de Castro
